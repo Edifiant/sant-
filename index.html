@@ -314,12 +314,24 @@
 </div>
 
 <script>
-let rows = [
+const DEFAULT_ROWS = [
   { id:1, date:"2026-02-06", type:"generaliste", somme:30, mgen_m:"9",  mgen_d:"2026-02-12", ameli_m:"6",  ameli_d:"2026-02-12" },
   { id:2, date:"2026-03-03", type:"generaliste", somme:30, mgen_m:"9",  mgen_d:"2026-03-09", ameli_m:"10", ameli_d:"2026-03-04" },
   { id:3, date:"2026-03-11", type:"generaliste", somme:30, mgen_m:"",   mgen_d:"",           ameli_m:"",   ameli_d:"" },
 ];
 
+function load() {
+  try {
+    const saved = localStorage.getItem("remboursements");
+    return saved ? JSON.parse(saved) : DEFAULT_ROWS;
+  } catch(e) { return DEFAULT_ROWS; }
+}
+
+function save() {
+  try { localStorage.setItem("remboursements", JSON.stringify(rows)); } catch(e) {}
+}
+
+let rows = load();
 let editingId = null;
 
 function fmtDate(iso) {
@@ -448,6 +460,7 @@ function saveRow() {
   } else {
     rows.push({ id: Date.now(), ...row });
   }
+  save();
   closeModal();
   render();
 }
@@ -460,6 +473,7 @@ function editRow(id) {
 function deleteRow(id) {
   if (confirm("Supprimer cette dépense ?")) {
     rows = rows.filter(r => r.id !== id);
+    save();
     render();
   }
 }
