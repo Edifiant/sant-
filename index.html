@@ -2,99 +2,97 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Suivi des Remboursements</title>
+    <title>Suivi Santé</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f7f6; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
-        .btn-add { background: #1a2340; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; }
-        input { width: 90%; padding: 5px; }
+        :root {
+            --primary: #6366f1;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+        }
+        body { font-family: 'Segoe UI', system-ui; background: var(--bg); padding: 20px; color: var(--text); }
+        .container { max-width: 900px; margin: auto; }
+        
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: var(--primary); margin-bottom: 5px; }
+
+        .table-container { background: var(--card); border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f1f5f9; padding: 15px; font-size: 0.85rem; text-transform: uppercase; color: #64748b; }
+        td { padding: 12px; border-top: 1px solid #f1f5f9; text-align: center; }
+
+        /* Style regroupé Remboursement */
+        .remb-group { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        .box { padding: 4px; border-radius: 4px; font-size: 0.8rem; }
+        .mutuelle { background: #e0e7ff; color: #4338ca; }
+        .secu { background: #dcfce7; color: #166534; }
+
+        input { border: 1px solid #ddd; padding: 5px; border-radius: 4px; width: 90%; }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-top: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Suivi des Remboursements</h1>
-    <div id="counter">0 en attente</div>
-    
-    <table id="main-table">
-        <thead>
-            <tr>
-                <th>Date Soin</th><th>Dépense</th><th>Coût</th>
-                <th>Mutuelle</th><th>Date Mut.</th>
-                <th>Sécu</th><th>Date Sécu</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-    </table>
-    <br>
-    <button class="btn-add" onclick="ajouterLigneVide()">+ Ajouter une ligne</button>
+    <div class="header">
+        <h1>Mon Suivi Santé</h1>
+        <p id="counter">0 en attente</p>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th><th>Dépense</th><th>Coût</th>
+                    <th>Remboursements (Mutuelle / Sécu)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+        </table>
+    </div>
+    <button class="btn-add" onclick="ajouterLigne()">+ Ajouter</button>
 </div>
 
 <script>
-    let rows = JSON.parse(localStorage.getItem('sante_data')) || [];
+    let rows = JSON.parse(localStorage.getItem('data')) || [];
 
-    function sauvegarder() {
-        localStorage.setItem('sante_data', JSON.stringify(rows));
-        afficherTableau();
-    }
+    function sauvegarder() { localStorage.setItem('data', JSON.stringify(rows)); afficher(); }
 
-    function ajouterLigneVide() {
-        // Ajoute un objet vide dans la liste
-        rows.push({
-            id: Date.now(),
-            date: new Date().toISOString().split('T')[0],
-            depense: "",
-            somme: 0,
-            mgen: 0,
-            mgenDate: "",
-            ameli: 0,
-            ameliDate: ""
-        });
-        afficherTableau();
-    }
-
-    function supprimerLigne(id) {
-        rows = rows.filter(r => r.id !== id);
+    function ajouterLigne() {
+        rows.push({ id: Date.now(), date: new Date().toISOString().split('T')[0], desc: "", cout: 0, m: 0, s: 0 });
         sauvegarder();
     }
 
-    function mettreAJour(id, champ, valeur) {
-        let row = rows.find(r => r.id === id);
-        if (row) {
-            row[champ] = valeur;
-            sauvegarder();
-        }
+    function update(id, field, val) {
+        let r = rows.find(x => x.id === id);
+        r[field] = val;
+        sauvegarder();
     }
 
-    function afficherTableau() {
+    function afficher() {
         const tbody = document.getElementById("tbody");
         tbody.innerHTML = "";
         let attente = 0;
 
-        rows.forEach(row => {
-            if (row.mgen == 0 || row.ameli == 0) attente++;
-
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td><input type="date" value="${row.date}" onchange="mettreAJour(${row.id}, 'date', this.value)"></td>
-                <td><input type="text" value="${row.depense}" oninput="mettreAJour(${row.id}, 'depense', this.value)"></td>
-                <td><input type="number" value="${row.somme}" oninput="mettreAJour(${row.id}, 'somme', this.value)"></td>
-                <td><input type="number" value="${row.mgen}" oninput="mettreAJour(${row.id}, 'mgen', this.value)"></td>
-                <td><input type="date" value="${row.mgenDate}" onchange="mettreAJour(${row.id}, 'mgenDate', this.value)"></td>
-                <td><input type="number" value="${row.ameli}" oninput="mettreAJour(${row.id}, 'ameli', this.value)"></td>
-                <td><input type="date" value="${row.ameliDate}" onchange="mettreAJour(${row.id}, 'ameliDate', this.value)"></td>
-                <td><button onclick="supprimerLigne(${row.id})">🗑️</button></td>
-            `;
-            tbody.appendChild(tr);
+        rows.forEach(r => {
+            if (r.m == 0 || r.s == 0) attente++;
+            tbody.innerHTML += `<tr>
+                <td><input type="date" value="${r.date}" onchange="update(${r.id}, 'date', this.value)"></td>
+                <td><input type="text" value="${r.desc}" oninput="update(${r.id}, 'desc', this.value)"></td>
+                <td><input type="number" value="${r.cout}" oninput="update(${r.id}, 'cout', this.value)"></td>
+                <td>
+                    <div class="remb-group">
+                        <div class="box mutuelle"><input type="number" value="${r.m}" oninput="update(${r.id}, 'm', this.value)"></div>
+                        <div class="box secu"><input type="number" value="${r.s}" oninput="update(${r.id}, 's', this.value)"></div>
+                    </div>
+                </td>
+                <td><button onclick="rows=rows.filter(x=>x.id!=${r.id});sauvegarder()">🗑️</button></td>
+            </tr>`;
         });
         document.getElementById("counter").innerText = attente + " remboursements en attente";
     }
-
-    // Premier affichage
-    afficherTableau();
+    afficher();
 </script>
 </body>
 </html>
