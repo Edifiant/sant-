@@ -2,396 +2,467 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Suivi des Remboursements</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:wght@400;500;600;700&display=swap');
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #1a2340;
+    --navy2: #243060;
+    --green: #2d6a4f;
+    --blue: #1d4e89;
+    --red: #c0392b;
+    --bg: #f0f4ff;
+    --card: #ffffff;
+    --border: #e2e8f8;
+    --text: #1a2340;
+    --sub: #6b7a99;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
   body {
+    background: var(--bg);
+    font-family: 'Source Sans 3', sans-serif;
+    color: var(--text);
     min-height: 100vh;
-    background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
-    display: flex; flex-direction: column; align-items: center;
-    padding: 48px 16px;
-    font-family: 'Source Sans 3', sans-serif;
+    padding-bottom: 100px;
   }
 
-  .container { width: 100%; max-width: 980px; }
-
-  h1 {
+  /* ── HEADER ── */
+  header {
+    background: var(--navy);
+    color: #fff;
+    padding: 20px 16px 16px;
+    text-align: center;
+    position: sticky; top: 0; z-index: 10;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  }
+  header h1 {
     font-family: 'Playfair Display', serif;
-    font-size: 28px; font-weight: 700; color: #1a2340;
-    text-align: center; margin-bottom: 6px; letter-spacing: -0.5px;
+    font-size: 20px; letter-spacing: -0.3px;
   }
-  .subtitle { text-align: center; color: #6b7a99; font-size: 14px; margin-bottom: 32px; }
+  header p { font-size: 12px; color: #9dafd8; margin-top: 2px; }
 
-  .card {
-    background: #fff; border-radius: 16px;
-    box-shadow: 0 4px 32px rgba(30,50,120,0.10);
-    overflow: hidden; border: 1px solid #e2e8f8;
+  /* ── RÉSUMÉ TOTAUX ── */
+  .summary {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; padding: 12px 12px 0;
+  }
+  .sum-card {
+    background: var(--card); border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 10px 8px; text-align: center;
+    box-shadow: 0 1px 6px rgba(30,50,120,0.06);
+  }
+  .sum-card .label { font-size: 10px; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; }
+  .sum-card .value { font-size: 18px; font-weight: 700; margin-top: 2px; }
+  .sum-card.s-somme .value { color: var(--navy); }
+  .sum-card.s-mgen  .value { color: var(--green); }
+  .sum-card.s-ameli .value { color: var(--blue); }
+
+  .reste {
+    margin: 8px 12px 0;
+    background: #fff8ec; border: 1px solid #e8d8a0;
+    border-radius: 12px; padding: 10px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .reste .label { font-size: 12px; color: #7a6930; font-weight: 600; }
+  .reste .value { font-size: 18px; font-weight: 700; }
+  .reste .value.pos { color: var(--red); }
+  .reste .value.neg { color: var(--green); }
+  .reste .value.zero { color: #888; }
+
+  /* ── LISTE DES FICHES ── */
+  .list { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+  .fiche {
+    background: var(--card); border-radius: 14px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 10px rgba(30,50,120,0.07);
+    overflow: hidden;
   }
 
-  table { width: 100%; border-collapse: collapse; }
-  thead tr:first-child { background: #1a2340; }
-  thead tr:last-child  { background: #243060; }
-
-  th {
-    padding: 11px 12px; color: #e8edf8;
-    font-family: 'Source Sans 3', sans-serif;
-    font-weight: 600; font-size: 12px; text-align: center;
-    letter-spacing: 0.4px; border: none;
+  .fiche-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px 8px;
+    border-bottom: 1px solid var(--border);
   }
-
-  td {
-    padding: 10px 12px; font-size: 14px;
-    border-bottom: 1px solid #e8edf8;
-    color: #1a2340; font-family: 'Playfair Display', serif;
-  }
-
-  tr:nth-child(even) td { background: #f7f9ff; }
-  tr:nth-child(odd)  td { background: #fff; }
-
-  td.mgen  { color: #2d6a4f; text-align: center; }
-  td.ameli { color: #1d4e89; text-align: center; }
-  td.date-cell { color: #6b7a99; font-style: italic; }
-  td.somme { text-align: center; font-weight: 600; }
-
-  .cell-amount { font-weight: 600; }
-  .cell-date-sub {
-    font-size: 12px; color: #999; font-style: italic;
-    display: block; margin-top: 2px;
-    font-family: 'Source Sans 3', sans-serif;
-  }
-
+  .fiche-header .left { display: flex; align-items: center; gap: 8px; }
+  .fiche-date { font-size: 13px; color: var(--sub); font-style: italic; min-width: 40px; }
   .badge {
-    display: inline-block; font-size: 11px; font-family: 'Source Sans 3', sans-serif;
-    padding: 2px 8px; border-radius: 20px; font-weight: 600; letter-spacing: 0.3px;
+    display: inline-block; font-size: 11px;
+    padding: 2px 9px; border-radius: 20px; font-weight: 600;
   }
-  .badge-g  { background: #e8f4ef; color: #2d6a4f; }
+  .badge-g  { background: #e8f4ef; color: var(--green); }
   .badge-sp { background: #e8eeff; color: #1a3aad; }
 
-  /* Totaux */
-  tr.totaux td {
-    background: #f0f4ff !important; font-weight: 700;
-    font-family: 'Source Sans 3', sans-serif; font-size: 13px;
-  }
-
-  /* Différentiel */
-  tr.diff td {
-    background: #fff8ec !important;
-    font-family: 'Source Sans 3', sans-serif; font-size: 13px;
-    font-weight: 600; border-top: 2px solid #e8d8a0;
-  }
-  td.diff-pos { color: #c0392b; text-align: center; }
-  td.diff-neg { color: #2d6a4f; text-align: center; }
-  td.diff-zero { color: #888; text-align: center; }
-  .diff-label { color: #7a6930; font-style: italic; font-weight: 600; }
-
-  .actions { text-align: center; white-space: nowrap; }
-
-  button.btn-edit, button.btn-del {
+  .fiche-actions { display: flex; gap: 4px; }
+  .btn-icon {
     background: none; border: none; cursor: pointer;
-    font-size: 14px; padding: 2px 5px; border-radius: 4px; transition: background 0.15s;
+    font-size: 16px; padding: 4px 6px; border-radius: 8px;
+    transition: background 0.15s;
   }
-  button.btn-edit:hover { background: #e8f0fe; }
-  button.btn-del:hover  { background: #fdecea; }
+  .btn-icon:active { background: #f0f0f0; }
 
-  button.btn-save {
-    background: #2d6a4f; color: #fff; border: none;
-    border-radius: 5px; cursor: pointer; font-size: 13px;
-    padding: 3px 9px; margin-right: 3px; transition: background 0.15s;
+  .fiche-body {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    padding: 10px 14px 12px; gap: 6px 4px;
   }
-  button.btn-save:hover { background: #1e4d38; }
-
-  button.btn-cancel {
-    background: #c0392b; color: #fff; border: none;
-    border-radius: 5px; cursor: pointer; font-size: 13px;
-    padding: 3px 9px; transition: background 0.15s;
+  .fiche-col { text-align: center; }
+  .fiche-col .col-label {
+    font-size: 10px; color: var(--sub);
+    text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px;
   }
-  button.btn-cancel:hover { background: #922b21; }
+  .fiche-col .col-val { font-size: 15px; font-weight: 700; }
+  .fiche-col .col-sub { font-size: 11px; color: #aaa; font-style: italic; margin-top: 1px; }
+  .fiche-col.c-somme .col-val { color: var(--navy); }
+  .fiche-col.c-mgen  .col-val { color: var(--green); }
+  .fiche-col.c-ameli .col-val { color: var(--blue); }
+  .empty-val { color: #ccc; font-weight: 400; }
 
-  input.cell-input, select.cell-select {
-    width: 100%; border: 1px solid #b0bcd8; border-radius: 6px;
-    padding: 4px 7px; font-size: 12px;
+  /* ── FAB ── */
+  .fab {
+    position: fixed; bottom: 24px; right: 20px;
+    background: var(--navy); color: #fff;
+    border: none; border-radius: 50px;
+    padding: 14px 22px; font-size: 15px; font-weight: 600;
     font-family: 'Source Sans 3', sans-serif;
-    outline: none; background: #fff; transition: border 0.15s;
-    color: #1a2340;
+    cursor: pointer; box-shadow: 0 4px 16px rgba(26,35,64,0.35);
+    display: flex; align-items: center; gap: 6px;
+    transition: background 0.2s, transform 0.15s;
+    z-index: 20;
   }
-  input.cell-input:focus, select.cell-select:focus { border-color: #1a2340; }
-  input[type="date"] { cursor: pointer; }
+  .fab:active { transform: scale(0.96); background: var(--navy2); }
 
-  .two-inputs { display: flex; flex-direction: column; gap: 4px; }
-  td.editing { padding: 5px 7px; }
+  /* ── MODAL ── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(10,15,35,0.55);
+    z-index: 30; display: none; align-items: flex-end;
+  }
+  .overlay.open { display: flex; }
 
-  .add-btn-wrap { display: flex; justify-content: center; margin-top: 20px; }
+  .modal {
+    background: #fff; border-radius: 20px 20px 0 0;
+    width: 100%; max-height: 92vh; overflow-y: auto;
+    padding: 0 0 32px;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(60px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
 
-  button.btn-add {
-    background: #1a2340; color: #fff; border: none;
-    border-radius: 8px; padding: 10px 28px; font-size: 14px;
+  .modal-handle {
+    display: flex; justify-content: center; padding: 10px 0 4px;
+  }
+  .modal-handle span {
+    width: 36px; height: 4px; border-radius: 2px; background: #dde3f0;
+  }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 700; color: var(--navy);
+    text-align: center; padding: 4px 16px 16px;
+  }
+
+  .form-section {
+    padding: 0 16px; margin-bottom: 12px;
+  }
+  .form-section .section-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--sub); font-weight: 600; margin-bottom: 8px;
+    padding-bottom: 4px; border-bottom: 1px solid var(--border);
+  }
+
+  .form-row { display: grid; gap: 10px; margin-bottom: 10px; }
+  .form-row.cols2 { grid-template-columns: 1fr 1fr; }
+  .form-row.cols1 { grid-template-columns: 1fr; }
+
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 12px; color: var(--sub); font-weight: 600; }
+
+  input.finput, select.finput {
+    border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; font-size: 15px;
+    font-family: 'Source Sans 3', sans-serif;
+    color: var(--text); background: #fff; outline: none;
+    width: 100%; transition: border 0.15s;
+    -webkit-appearance: none;
+  }
+  input.finput:focus, select.finput:focus { border-color: var(--navy); }
+  input[type="date"].finput { cursor: pointer; }
+
+  .reimb-block {
+    background: #f8faff; border-radius: 12px;
+    border: 1px solid var(--border); padding: 12px;
+    margin-bottom: 10px;
+  }
+  .reimb-block .rb-title {
+    font-size: 12px; font-weight: 700; margin-bottom: 8px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .reimb-block.mgen  .rb-title { color: var(--green); }
+  .reimb-block.ameli .rb-title { color: var(--blue); }
+
+  .modal-footer {
+    padding: 12px 16px 0;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .btn-confirm {
+    background: var(--green); color: #fff; border: none;
+    border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600;
     font-family: 'Source Sans 3', sans-serif; cursor: pointer;
-    letter-spacing: 0.5px; transition: background 0.2s;
-    box-shadow: 0 2px 8px rgba(26,35,64,0.15);
+    transition: background 0.15s;
   }
-  button.btn-add:hover { background: #243060; }
-  button.btn-add:disabled { background: #c9d3ea; cursor: not-allowed; }
+  .btn-confirm:active { background: #1e4d38; }
+  .btn-dismiss {
+    background: #f0f4ff; color: var(--navy); border: none;
+    border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600;
+    font-family: 'Source Sans 3', sans-serif; cursor: pointer;
+  }
+  .btn-dismiss:active { background: #dde5f8; }
 
-  tr.adding-row td { background: #eef6ff !important; }
-  .empty { color: #ccc; }
+  .empty-state {
+    text-align: center; color: var(--sub); padding: 40px 20px;
+    font-size: 15px;
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 10px; }
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>Suivi des Remboursements</h1>
-  <p class="subtitle">Gérez vos dépenses et remboursements santé</p>
 
-  <div class="card">
-    <table>
-      <thead>
-        <tr>
-          <th rowspan="2">Date</th>
-          <th rowspan="2">Dépenses</th>
-          <th rowspan="2">Somme</th>
-          <th colspan="2" style="border-bottom:1px solid #2e3d6a;">Remboursements</th>
-          <th rowspan="2" style="width:70px;"></th>
-        </tr>
-        <tr>
-          <th>Mutuelle</th>
-          <th>Sécu</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
+<header>
+  <h1>💊 Suivi des Remboursements</h1>
+  <p>Dépenses &amp; remboursements santé</p>
+</header>
 
-  <div class="add-btn-wrap">
-    <button class="btn-add" id="btn-add" onclick="startAdding()">+ Ajouter une ligne</button>
+<div class="summary" id="summary"></div>
+<div id="reste-wrap"></div>
+<div class="list" id="list"></div>
+
+<button class="fab" onclick="openModal()">＋ Ajouter</button>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="closeOnOverlay(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"><span></span></div>
+    <div class="modal-title" id="modal-title">Nouvelle dépense</div>
+
+    <div class="form-section">
+      <div class="section-title">Consultation</div>
+      <div class="form-row cols2">
+        <div class="form-group">
+          <label>Date</label>
+          <input class="finput" type="date" id="f-date">
+        </div>
+        <div class="form-group">
+          <label>Type</label>
+          <select class="finput" id="f-type">
+            <option value="generaliste">Généraliste</option>
+            <option value="specialiste">Spécialiste</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row cols1">
+        <div class="form-group">
+          <label>Somme payée (€)</label>
+          <input class="finput" type="number" step="0.01" id="f-somme" placeholder="ex : 30">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-title">Remboursements</div>
+
+      <div class="reimb-block mgen">
+        <div class="rb-title">🟢 Mutuelle</div>
+        <div class="form-row cols2">
+          <div class="form-group">
+            <label>Montant (€)</label>
+            <input class="finput" type="number" step="0.01" id="f-mgen-m" placeholder="ex : 9">
+          </div>
+          <div class="form-group">
+            <label>Date remb.</label>
+            <input class="finput" type="date" id="f-mgen-d">
+          </div>
+        </div>
+      </div>
+
+      <div class="reimb-block ameli">
+        <div class="rb-title">🔵 Sécu</div>
+        <div class="form-row cols2">
+          <div class="form-group">
+            <label>Montant (€)</label>
+            <input class="finput" type="number" step="0.01" id="f-ameli-m" placeholder="ex : 6">
+          </div>
+          <div class="form-group">
+            <label>Date remb.</label>
+            <input class="finput" type="date" id="f-ameli-d">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-dismiss" onclick="closeModal()">Annuler</button>
+      <button class="btn-confirm" onclick="saveRow()">Enregistrer</button>
+    </div>
   </div>
 </div>
 
 <script>
 let rows = [
-  { id:1, date:"2026-02-06", depense:"generaliste", somme:30, mgen_m:"9",  mgen_d:"2026-02-12", ameli_m:"6",  ameli_d:"2026-02-12" },
-  { id:2, date:"2026-03-03", depense:"generaliste", somme:30, mgen_m:"9",  mgen_d:"2026-03-09", ameli_m:"10", ameli_d:"2026-03-04" },
-  { id:3, date:"2026-03-11", depense:"generaliste", somme:30, mgen_m:"",   mgen_d:"",           ameli_m:"",   ameli_d:"" },
+  { id:1, date:"2026-02-06", type:"generaliste", somme:30, mgen_m:"9",  mgen_d:"2026-02-12", ameli_m:"6",  ameli_d:"2026-02-12" },
+  { id:2, date:"2026-03-03", type:"generaliste", somme:30, mgen_m:"9",  mgen_d:"2026-03-09", ameli_m:"10", ameli_d:"2026-03-04" },
+  { id:3, date:"2026-03-11", type:"generaliste", somme:30, mgen_m:"",   mgen_d:"",           ameli_m:"",   ameli_d:"" },
 ];
 
 let editingId = null;
-let adding = false;
-
-function esc(s) {
-  return String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-}
 
 function fmtDate(iso) {
   if (!iso) return "";
   const p = iso.split("-");
-  if (p.length === 3) return parseInt(p[2]) + "/" + parseInt(p[1]);
-  return iso;
+  return parseInt(p[2]) + "/" + parseInt(p[1]);
 }
-
 function fmt(v) {
-  if (v === "" || isNaN(v)) return "";
-  return parseFloat(v).toFixed(2).replace(/\.00$/, "") + " €";
+  const n = parseFloat(v);
+  if (isNaN(n) || v === "") return "";
+  return n.toFixed(2).replace(/\.00$/,"") + " €";
 }
-
-function depenseLabel(val) {
-  if (val === "generaliste") return `<span class="badge badge-g">Généraliste</span>`;
-  if (val === "specialiste") return `<span class="badge badge-sp">Spécialiste</span>`;
-  return esc(val);
-}
-
-function makeTdDisplay(montant, dateIso, cssClass) {
-  const td = document.createElement("td");
-  td.className = cssClass;
-  if (!montant && !dateIso) {
-    td.innerHTML = `<span class="empty">—</span>`;
-  } else {
-    td.innerHTML =
-      `<span class="cell-amount">${esc(montant)}${montant ? " €" : ""}</span>` +
-      (dateIso ? `<span class="cell-date-sub">le ${fmtDate(dateIso)}</span>` : "");
-  }
-  return td;
-}
-
-function makeTdEditReimb(m, d, prefix, rid) {
-  const td = document.createElement("td");
-  td.className = "editing";
-  td.innerHTML = `<div class="two-inputs">
-    <input class="cell-input" type="number" step="0.01" placeholder="Montant (€)"
-      value="${esc(m)}" data-field="${prefix}_m" data-id="${rid}">
-    <input class="cell-input" type="date"
-      value="${esc(d)}" data-field="${prefix}_d" data-id="${rid}">
-  </div>`;
-  return td;
-}
-
-function makeTdInput(val, field, rid, placeholder, type) {
-  const td = document.createElement("td");
-  td.className = "editing";
-  td.innerHTML = `<input class="cell-input" type="${type||'text'}" placeholder="${esc(placeholder)}"
-    value="${esc(val)}" data-field="${field}" data-id="${rid}">`;
-  return td;
-}
-
-function makeTdDepenseEdit(val, rid) {
-  const td = document.createElement("td");
-  td.className = "editing";
-  const sel = document.createElement("select");
-  sel.className = "cell-select";
-  sel.setAttribute("data-field", "depense");
-  sel.setAttribute("data-id", rid);
-  [["generaliste","Généraliste"],["specialiste","Spécialiste"]].forEach(([v,l]) => {
-    const opt = document.createElement("option");
-    opt.value = v; opt.textContent = l;
-    if (val === v) opt.selected = true;
-    sel.appendChild(opt);
-  });
-  td.appendChild(sel);
-  return td;
-}
-
-function diffClass(v) {
-  if (v > 0) return "diff-pos";
-  if (v < 0) return "diff-neg";
-  return "diff-zero";
-}
-
-function diffSign(v) {
-  if (v === 0 || v === "") return "0 €";
-  const s = parseFloat(v).toFixed(2).replace(/\.00$/,"");
-  return (v > 0 ? "+" : "") + s + " €";
+function fmtSign(v) {
+  if (v === 0) return "0 €";
+  const s = Math.abs(v).toFixed(2).replace(/\.00$/,"");
+  return (v > 0 ? "+" : "-") + s + " €";
 }
 
 function render() {
-  const tbody = document.getElementById("tbody");
-  tbody.innerHTML = "";
-
-  rows.forEach(row => {
-    const tr = document.createElement("tr");
-
-    if (editingId === row.id) {
-      tr.appendChild(makeTdInput(row.date, "date", row.id, "Date", "date"));
-      tr.appendChild(makeTdDepenseEdit(row.depense, row.id));
-      tr.appendChild(makeTdInput(row.somme, "somme", row.id, "Somme (€)", "number"));
-      tr.appendChild(makeTdEditReimb(row.mgen_m, row.mgen_d, "mgen", row.id));
-      tr.appendChild(makeTdEditReimb(row.ameli_m, row.ameli_d, "ameli", row.id));
-      const tdA = document.createElement("td"); tdA.className = "actions";
-      tdA.innerHTML = `<button class="btn-save" onclick="saveEdit(${row.id})">✓</button><button class="btn-cancel" onclick="cancelEdit()">✕</button>`;
-      tr.appendChild(tdA);
-    } else {
-      const tdDate = document.createElement("td"); tdDate.className = "date-cell"; tdDate.textContent = fmtDate(row.date);
-      const tdDep = document.createElement("td");
-      if (row.somme) tdDep.style.textDecoration = "underline";
-      tdDep.innerHTML = depenseLabel(row.depense);
-      const tdSomme = document.createElement("td"); tdSomme.className = "somme";
-      tdSomme.textContent = row.somme !== "" ? row.somme + " €" : "";
-      if (!row.somme) tdSomme.style.color = "#ccc";
-      tr.appendChild(tdDate);
-      tr.appendChild(tdDep);
-      tr.appendChild(tdSomme);
-      tr.appendChild(makeTdDisplay(row.mgen_m, row.mgen_d, "mgen"));
-      tr.appendChild(makeTdDisplay(row.ameli_m, row.ameli_d, "ameli"));
-      const tdA = document.createElement("td"); tdA.className = "actions";
-      tdA.innerHTML = `<button class="btn-edit" onclick="startEdit(${row.id})" title="Modifier">✏️</button>
-                       <button class="btn-del"  onclick="deleteRow(${row.id})" title="Supprimer">🗑</button>`;
-      tr.appendChild(tdA);
-    }
-
-    tbody.appendChild(tr);
-  });
-
-  // Adding row
-  if (adding) {
-    const tr = document.createElement("tr"); tr.className = "adding-row";
-    const td1 = document.createElement("td"); td1.className="editing";
-    td1.innerHTML=`<input class="cell-input" type="date" id="n-date">`;
-    tr.appendChild(td1);
-    const td2 = document.createElement("td"); td2.className="editing";
-    td2.innerHTML=`<select class="cell-select" id="n-dep">
-      <option value="generaliste">Généraliste</option>
-      <option value="specialiste">Spécialiste</option>
-    </select>`;
-    tr.appendChild(td2);
-    const td3 = document.createElement("td"); td3.className="editing";
-    td3.innerHTML=`<input class="cell-input" type="number" step="0.01" id="n-somme" placeholder="Somme (€)">`;
-    tr.appendChild(td3);
-    ["mgen","ameli"].forEach(p => {
-      const td = document.createElement("td"); td.className="editing";
-      td.innerHTML=`<div class="two-inputs">
-        <input class="cell-input" type="number" step="0.01" id="n-${p}_m" placeholder="Montant (€)">
-        <input class="cell-input" type="date" id="n-${p}_d">
-      </div>`;
-      tr.appendChild(td);
-    });
-    const tdA = document.createElement("td"); tdA.className="actions";
-    tdA.innerHTML=`<button class="btn-save" onclick="addRow()">✓</button><button class="btn-cancel" onclick="cancelAdding()">✕</button>`;
-    tr.appendChild(tdA);
-    tbody.appendChild(tr);
-  }
-
   // Totaux
   const tS = rows.reduce((s,r)=>s+(parseFloat(r.somme)||0),0);
   const tM = rows.reduce((s,r)=>s+(parseFloat(r.mgen_m)||0),0);
   const tA = rows.reduce((s,r)=>s+(parseFloat(r.ameli_m)||0),0);
+  const reste = tS - tM - tA;
 
-  const trT = document.createElement("tr"); trT.className="totaux";
-  trT.innerHTML=`<td colspan="2" style="color:#1a2340;">TOTAUX</td>
-    <td class="somme">${tS>0?fmt(tS):""}</td>
-    <td class="mgen">${tM>0?fmt(tM):""}</td>
-    <td class="ameli">${tA>0?fmt(tA):""}</td><td></td>`;
-  tbody.appendChild(trT);
+  document.getElementById("summary").innerHTML = `
+    <div class="sum-card s-somme"><div class="label">Dépensé</div><div class="value">${fmt(tS)||"0 €"}</div></div>
+    <div class="sum-card s-mgen"><div class="label">Mutuelle</div><div class="value">${fmt(tM)||"0 €"}</div></div>
+    <div class="sum-card s-ameli"><div class="label">Sécu</div><div class="value">${fmt(tA)||"0 €"}</div></div>
+  `;
 
-  // Différentiel = somme - mutuelle - sécu (reste à charge)
-  const diffS = tS - tM - tA;   // reste à charge global
-  const diffM = tM - tS;        // mutuelle vs somme
-  const diffA = tA - tS;        // sécu vs somme
+  const rc = reste > 0 ? "pos" : reste < 0 ? "neg" : "zero";
+  document.getElementById("reste-wrap").innerHTML = `
+    <div class="reste">
+      <span class="label">Reste à charge</span>
+      <span class="value ${rc}">${reste >= 0 ? "" : ""}${fmt(Math.abs(reste))||"0 €"}${reste < 0 ? " 🎉" : ""}</span>
+    </div>
+  `;
 
-  const trD = document.createElement("tr"); trD.className="diff";
-  trD.innerHTML=`
-    <td colspan="2" class="diff-label">Reste à charge</td>
-    <td class="${diffClass(diffS)} somme">${diffSign(diffS)}</td>
-    <td class="${diffClass(-diffM)} mgen">${diffSign(-diffM)}</td>
-    <td class="${diffClass(-diffA)} ameli">${diffSign(-diffA)}</td>
-    <td></td>`;
-  tbody.appendChild(trD);
+  // Liste
+  const list = document.getElementById("list");
+  if (rows.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">📋</div>Aucune dépense enregistrée.<br>Appuyez sur <strong>+ Ajouter</strong> pour commencer.</div>`;
+    return;
+  }
 
-  document.getElementById("btn-add").disabled = adding;
-}
+  list.innerHTML = "";
+  [...rows].reverse().forEach(row => {
+    const div = document.createElement("div");
+    div.className = "fiche";
 
-function startEdit(id) { editingId = id; render(); }
+    const mVal = row.mgen_m  ? `<span class="col-val">${row.mgen_m} €</span>${row.mgen_d  ? `<div class="col-sub">le ${fmtDate(row.mgen_d)}</div>`  : ""}` : `<span class="col-val empty-val">—</span>`;
+    const aVal = row.ameli_m ? `<span class="col-val">${row.ameli_m} €</span>${row.ameli_d ? `<div class="col-sub">le ${fmtDate(row.ameli_d)}</div>` : ""}` : `<span class="col-val empty-val">—</span>`;
+    const sVal = row.somme   ? `<span class="col-val">${row.somme} €</span>` : `<span class="col-val empty-val">—</span>`;
 
-function saveEdit(id) {
-  rows = rows.map(r => {
-    if (r.id !== id) return r;
-    const g = f => {
-      const el = document.querySelector(`[data-field="${f}"][data-id="${id}"]`);
-      return el ? el.value : "";
-    };
-    return { ...r, date:g("date"), depense:g("depense"), somme:g("somme"),
-      mgen_m:g("mgen_m"), mgen_d:g("mgen_d"), ameli_m:g("ameli_m"), ameli_d:g("ameli_d") };
+    const badgeHtml = row.type === "generaliste"
+      ? `<span class="badge badge-g">Généraliste</span>`
+      : `<span class="badge badge-sp">Spécialiste</span>`;
+
+    div.innerHTML = `
+      <div class="fiche-header">
+        <div class="left">
+          <span class="fiche-date">${fmtDate(row.date)||"—"}</span>
+          ${badgeHtml}
+        </div>
+        <div class="fiche-actions">
+          <button class="btn-icon" onclick="editRow(${row.id})" title="Modifier">✏️</button>
+          <button class="btn-icon" onclick="deleteRow(${row.id})" title="Supprimer">🗑</button>
+        </div>
+      </div>
+      <div class="fiche-body">
+        <div class="fiche-col c-somme">
+          <div class="col-label">Somme</div>
+          ${sVal}
+        </div>
+        <div class="fiche-col c-mgen">
+          <div class="col-label">Mutuelle</div>
+          ${mVal}
+        </div>
+        <div class="fiche-col c-ameli">
+          <div class="col-label">Sécu</div>
+          ${aVal}
+        </div>
+      </div>
+    `;
+    list.appendChild(div);
   });
-  editingId = null; render();
 }
 
-function cancelEdit() { editingId = null; render(); }
+function openModal(prefill) {
+  editingId = prefill ? prefill.id : null;
+  document.getElementById("modal-title").textContent = prefill ? "Modifier la dépense" : "Nouvelle dépense";
+  document.getElementById("f-date").value    = prefill?.date    || "";
+  document.getElementById("f-type").value    = prefill?.type    || "generaliste";
+  document.getElementById("f-somme").value   = prefill?.somme   || "";
+  document.getElementById("f-mgen-m").value  = prefill?.mgen_m  || "";
+  document.getElementById("f-mgen-d").value  = prefill?.mgen_d  || "";
+  document.getElementById("f-ameli-m").value = prefill?.ameli_m || "";
+  document.getElementById("f-ameli-d").value = prefill?.ameli_d || "";
+  document.getElementById("overlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeModal() {
+  document.getElementById("overlay").classList.remove("open");
+  document.body.style.overflow = "";
+  editingId = null;
+}
+
+function closeOnOverlay(e) {
+  if (e.target === document.getElementById("overlay")) closeModal();
+}
+
+function saveRow() {
+  const row = {
+    date:    document.getElementById("f-date").value,
+    type:    document.getElementById("f-type").value,
+    somme:   document.getElementById("f-somme").value,
+    mgen_m:  document.getElementById("f-mgen-m").value,
+    mgen_d:  document.getElementById("f-mgen-d").value,
+    ameli_m: document.getElementById("f-ameli-m").value,
+    ameli_d: document.getElementById("f-ameli-d").value,
+  };
+  if (editingId) {
+    rows = rows.map(r => r.id === editingId ? { id: r.id, ...row } : r);
+  } else {
+    rows.push({ id: Date.now(), ...row });
+  }
+  closeModal();
+  render();
+}
+
+function editRow(id) {
+  const row = rows.find(r => r.id === id);
+  if (row) openModal(row);
+}
 
 function deleteRow(id) {
-  if (confirm("Supprimer cette ligne ?")) { rows = rows.filter(r=>r.id!==id); render(); }
+  if (confirm("Supprimer cette dépense ?")) {
+    rows = rows.filter(r => r.id !== id);
+    render();
+  }
 }
-
-function startAdding() { adding = true; render(); }
-
-function addRow() {
-  const g = id => document.getElementById(id)?.value || "";
-  rows.push({ id:Date.now(),
-    date:g("n-date"), depense:g("n-dep"), somme:g("n-somme"),
-    mgen_m:g("n-mgen_m"), mgen_d:g("n-mgen_d"),
-    ameli_m:g("n-ameli_m"), ameli_d:g("n-ameli_d") });
-  adding = false; render();
-}
-
-function cancelAdding() { adding = false; render(); }
 
 render();
 </script>
