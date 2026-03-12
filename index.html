@@ -1,98 +1,332 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Suivi Santé</title>
-    <style>
-        :root {
-            --primary: #6366f1;
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --text: #1e293b;
-        }
-        body { font-family: 'Segoe UI', system-ui; background: var(--bg); padding: 20px; color: var(--text); }
-        .container { max-width: 900px; margin: auto; }
-        
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { color: var(--primary); margin-bottom: 5px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi des Remboursements</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;500;600&display=swap');
 
-        .table-container { background: var(--card); border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); overflow: hidden; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f1f5f9; padding: 15px; font-size: 0.85rem; text-transform: uppercase; color: #64748b; }
-        td { padding: 12px; border-top: 1px solid #f1f5f9; text-align: center; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* Style regroupé Remboursement */
-        .remb-group { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-        .box { padding: 4px; border-radius: 4px; font-size: 0.8rem; }
-        .mutuelle { background: #e0e7ff; color: #4338ca; }
-        .secu { background: #dcfce7; color: #166534; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 16px;
+    font-family: 'Source Sans 3', sans-serif;
+  }
 
-        input { border: 1px solid #ddd; padding: 5px; border-radius: 4px; width: 90%; }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-top: 20px; font-weight: bold; }
-    </style>
+  .container { width: 100%; max-width: 960px; }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a2340;
+    text-align: center;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #6b7a99;
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 32px rgba(30,50,120,0.10);
+    overflow: hidden;
+    border: 1px solid #e2e8f8;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead tr:first-child { background: #1a2340; }
+  thead tr:last-child { background: #243060; }
+
+  th {
+    padding: 11px 12px;
+    color: #e8edf8;
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    text-align: center;
+    letter-spacing: 0.4px;
+    border: none;
+  }
+
+  td {
+    padding: 10px 12px;
+    font-size: 14px;
+    border-bottom: 1px solid #e8edf8;
+    color: #1a2340;
+    font-family: 'Playfair Display', serif;
+  }
+
+  tr:nth-child(even) td { background: #f7f9ff; }
+  tr:nth-child(odd) td { background: #fff; }
+
+  td.mgen { color: #2d6a4f; text-align: center; }
+  td.ameli { color: #1d4e89; text-align: center; }
+  td.date-cell { color: #6b7a99; font-style: italic; }
+  td.somme { text-align: center; font-weight: 600; }
+
+  .cell-amount { font-weight: 600; }
+  .cell-date-sub {
+    font-size: 12px; color: #999; font-style: italic;
+    display: block; margin-top: 2px;
+    font-family: 'Source Sans 3', sans-serif;
+  }
+
+  tr.totaux td {
+    background: #f0f4ff !important;
+    font-weight: 700;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 13px;
+  }
+
+  .actions { text-align: center; white-space: nowrap; }
+
+  button.btn-edit, button.btn-del {
+    background: none; border: none; cursor: pointer;
+    font-size: 14px; padding: 2px 5px; border-radius: 4px;
+    transition: background 0.15s;
+  }
+  button.btn-edit:hover { background: #e8f0fe; }
+  button.btn-del:hover { background: #fdecea; }
+
+  button.btn-save {
+    background: #2d6a4f; color: #fff; border: none;
+    border-radius: 5px; cursor: pointer; font-size: 13px;
+    padding: 3px 9px; margin-right: 3px; transition: background 0.15s;
+  }
+  button.btn-save:hover { background: #1e4d38; }
+
+  button.btn-cancel {
+    background: #c0392b; color: #fff; border: none;
+    border-radius: 5px; cursor: pointer; font-size: 13px;
+    padding: 3px 9px; transition: background 0.15s;
+  }
+  button.btn-cancel:hover { background: #922b21; }
+
+  input.cell-input {
+    width: 100%;
+    border: 1px solid #b0bcd8;
+    border-radius: 6px;
+    padding: 4px 7px;
+    font-size: 12px;
+    font-family: 'Source Sans 3', sans-serif;
+    outline: none;
+    background: #fff;
+    transition: border 0.15s;
+  }
+  input.cell-input:focus { border-color: #1a2340; }
+
+  .two-inputs { display: flex; flex-direction: column; gap: 4px; }
+
+  td.editing { padding: 5px 7px; }
+
+  .add-btn-wrap { display: flex; justify-content: center; margin-top: 20px; }
+
+  button.btn-add {
+    background: #1a2340; color: #fff; border: none;
+    border-radius: 8px; padding: 10px 28px; font-size: 14px;
+    font-family: 'Source Sans 3', sans-serif; cursor: pointer;
+    letter-spacing: 0.5px; transition: background 0.2s;
+    box-shadow: 0 2px 8px rgba(26,35,64,0.15);
+  }
+  button.btn-add:hover { background: #243060; }
+  button.btn-add:disabled { background: #c9d3ea; cursor: not-allowed; }
+
+  tr.adding-row td { background: #eef6ff !important; }
+  .empty { color: #ccc; }
+</style>
 </head>
 <body>
-
 <div class="container">
-    <div class="header">
-        <h1>Mon Suivi Santé</h1>
-        <p id="counter">0 en attente</p>
-    </div>
+  <h1>Suivi des Remboursements</h1>
+  <p class="subtitle">Gérez vos dépenses et remboursements santé</p>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th><th>Dépense</th><th>Coût</th>
-                    <th>Remboursements (Mutuelle / Sécu)</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-        </table>
-    </div>
-    <button class="btn-add" onclick="ajouterLigne()">+ Ajouter</button>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th rowspan="2">Date</th>
+          <th rowspan="2">Dépenses</th>
+          <th rowspan="2">Somme</th>
+          <th colspan="2" style="border-bottom:1px solid #2e3d6a;">Remboursements</th>
+          <th rowspan="2" style="width:70px;"></th>
+        </tr>
+        <tr>
+          <th>Mutuelle</th>
+          <th>Sécu</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="add-btn-wrap">
+    <button class="btn-add" id="btn-add" onclick="startAdding()">+ Ajouter une ligne</button>
+  </div>
 </div>
 
 <script>
-    let rows = JSON.parse(localStorage.getItem('data')) || [];
+let rows = [
+  { id:1, date:"6/02",  depense:"Azrak",        somme:30, mgen_m:"9",  mgen_d:"12/02", ameli_m:"6",  ameli_d:"12/02" },
+  { id:2, date:"3/03",  depense:"Azrak",        somme:30, mgen_m:"9",  mgen_d:"9/03",  ameli_m:"10", ameli_d:"4/03"  },
+  { id:3, date:"",      depense:"Dermatologie", somme:"", mgen_m:"",   mgen_d:"",      ameli_m:"",   ameli_d:""      },
+  { id:4, date:"11/03", depense:"Azrak",        somme:30, mgen_m:"",   mgen_d:"",      ameli_m:"",   ameli_d:""      },
+];
 
-    function sauvegarder() { localStorage.setItem('data', JSON.stringify(rows)); afficher(); }
+let editingId = null;
+let adding = false;
 
-    function ajouterLigne() {
-        rows.push({ id: Date.now(), date: new Date().toISOString().split('T')[0], desc: "", cout: 0, m: 0, s: 0 });
-        sauvegarder();
+function newEmptyRow() {
+  return { date:"", depense:"", somme:"", mgen_m:"", mgen_d:"", ameli_m:"", ameli_d:"" };
+}
+let newRow = newEmptyRow();
+
+function esc(str) {
+  return String(str||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function makeTdDisplay(montant, date, cssClass) {
+  const td = document.createElement("td");
+  td.className = cssClass;
+  if (!montant && !date) {
+    td.innerHTML = `<span class="empty">—</span>`;
+  } else {
+    td.innerHTML =
+      `<span class="cell-amount">${esc(montant)}${montant ? " €" : ""}</span>` +
+      (date ? `<span class="cell-date-sub">le ${esc(date)}</span>` : "");
+  }
+  return td;
+}
+
+function makeTdEdit(m, d, prefix, rid) {
+  const td = document.createElement("td");
+  td.className = "editing";
+  td.innerHTML = `<div class="two-inputs">
+    <input class="cell-input" placeholder="Montant (€)" value="${esc(m)}" data-field="${prefix}_m" data-id="${rid}">
+    <input class="cell-input" placeholder="Date remb." value="${esc(d)}" data-field="${prefix}_d" data-id="${rid}">
+  </div>`;
+  return td;
+}
+
+function makeTdInput(val, field, rid, placeholder) {
+  const td = document.createElement("td");
+  td.className = "editing";
+  td.innerHTML = `<input class="cell-input" placeholder="${esc(placeholder)}" value="${esc(val)}" data-field="${field}" data-id="${rid}">`;
+  return td;
+}
+
+function render() {
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = "";
+
+  rows.forEach(row => {
+    const tr = document.createElement("tr");
+
+    if (editingId === row.id) {
+      tr.appendChild(makeTdInput(row.date,    "date",    row.id, "Date"));
+      tr.appendChild(makeTdInput(row.depense, "depense", row.id, "Dépenses"));
+      tr.appendChild(makeTdInput(row.somme,   "somme",   row.id, "Somme (€)"));
+      tr.appendChild(makeTdEdit(row.mgen_m, row.mgen_d,   "mgen",  row.id));
+      tr.appendChild(makeTdEdit(row.ameli_m, row.ameli_d, "ameli", row.id));
+      const tdA = document.createElement("td"); tdA.className = "actions";
+      tdA.innerHTML = `<button class="btn-save" onclick="saveEdit(${row.id})">✓</button><button class="btn-cancel" onclick="cancelEdit()">✕</button>`;
+      tr.appendChild(tdA);
+    } else {
+      const tdDate = document.createElement("td"); tdDate.className = "date-cell"; tdDate.textContent = row.date;
+      const tdDep  = document.createElement("td");
+      tdDep.style.fontWeight = row.depense ? "500" : "400";
+      if (row.somme) tdDep.style.textDecoration = "underline";
+      tdDep.textContent = row.depense;
+      const tdSomme = document.createElement("td"); tdSomme.className = "somme";
+      tdSomme.textContent = row.somme !== "" ? row.somme + " €" : "";
+      if (!row.somme) tdSomme.style.color = "#ccc";
+      tr.appendChild(tdDate);
+      tr.appendChild(tdDep);
+      tr.appendChild(tdSomme);
+      tr.appendChild(makeTdDisplay(row.mgen_m,  row.mgen_d,  "mgen"));
+      tr.appendChild(makeTdDisplay(row.ameli_m, row.ameli_d, "ameli"));
+      const tdA = document.createElement("td"); tdA.className = "actions";
+      tdA.innerHTML = `<button class="btn-edit" onclick="startEdit(${row.id})" title="Modifier">✏️</button><button class="btn-del" onclick="deleteRow(${row.id})" title="Supprimer">🗑</button>`;
+      tr.appendChild(tdA);
     }
 
-    function update(id, field, val) {
-        let r = rows.find(x => x.id === id);
-        r[field] = val;
-        sauvegarder();
-    }
+    tbody.appendChild(tr);
+  });
 
-    function afficher() {
-        const tbody = document.getElementById("tbody");
-        tbody.innerHTML = "";
-        let attente = 0;
+  if (adding) {
+    const tr = document.createElement("tr"); tr.className = "adding-row";
+    const mkNew = (id, ph) => `<input class="cell-input" id="${id}" placeholder="${ph}">`;
+    const td1 = document.createElement("td"); td1.className="editing"; td1.innerHTML=mkNew("n-date","Date"); tr.appendChild(td1);
+    const td2 = document.createElement("td"); td2.className="editing"; td2.innerHTML=mkNew("n-dep","Dépenses"); tr.appendChild(td2);
+    const td3 = document.createElement("td"); td3.className="editing"; td3.innerHTML=mkNew("n-somme","Somme (€)"); tr.appendChild(td3);
+    ["mgen","ameli"].forEach(p => {
+      const td = document.createElement("td"); td.className="editing";
+      td.innerHTML=`<div class="two-inputs">${mkNew("n-"+p+"_m","Montant (€)")}${mkNew("n-"+p+"_d","Date remb.")}</div>`;
+      tr.appendChild(td);
+    });
+    const tdA = document.createElement("td"); tdA.className="actions";
+    tdA.innerHTML=`<button class="btn-save" onclick="addRow()">✓</button><button class="btn-cancel" onclick="cancelAdding()">✕</button>`;
+    tr.appendChild(tdA);
+    tbody.appendChild(tr);
+  }
 
-        rows.forEach(r => {
-            if (r.m == 0 || r.s == 0) attente++;
-            tbody.innerHTML += `<tr>
-                <td><input type="date" value="${r.date}" onchange="update(${r.id}, 'date', this.value)"></td>
-                <td><input type="text" value="${r.desc}" oninput="update(${r.id}, 'desc', this.value)"></td>
-                <td><input type="number" value="${r.cout}" oninput="update(${r.id}, 'cout', this.value)"></td>
-                <td>
-                    <div class="remb-group">
-                        <div class="box mutuelle"><input type="number" value="${r.m}" oninput="update(${r.id}, 'm', this.value)"></div>
-                        <div class="box secu"><input type="number" value="${r.s}" oninput="update(${r.id}, 's', this.value)"></div>
-                    </div>
-                </td>
-                <td><button onclick="rows=rows.filter(x=>x.id!=${r.id});sauvegarder()">🗑️</button></td>
-            </tr>`;
-        });
-        document.getElementById("counter").innerText = attente + " remboursements en attente";
-    }
-    afficher();
+  // Totals
+  const tS = rows.reduce((s,r)=>s+(parseFloat(r.somme)||0),0);
+  const tM = rows.reduce((s,r)=>s+(parseFloat(r.mgen_m)||0),0);
+  const tA = rows.reduce((s,r)=>s+(parseFloat(r.ameli_m)||0),0);
+  const trT = document.createElement("tr"); trT.className="totaux";
+  trT.innerHTML=`<td colspan="2" style="color:#1a2340;">TOTAUX</td>
+    <td class="somme">${tS>0?tS+" €":""}</td>
+    <td class="mgen">${tM>0?tM+" €":""}</td>
+    <td class="ameli">${tA>0?tA+" €":""}</td><td></td>`;
+  tbody.appendChild(trT);
+
+  document.getElementById("btn-add").disabled = adding;
+}
+
+function startEdit(id) { editingId = id; render(); }
+
+function saveEdit(id) {
+  rows = rows.map(r => {
+    if (r.id !== id) return r;
+    const g = f => document.querySelector(`input[data-field="${f}"][data-id="${id}"]`)?.value || "";
+    return { ...r, date:g("date"), depense:g("depense"), somme:g("somme"),
+      mgen_m:g("mgen_m"), mgen_d:g("mgen_d"), ameli_m:g("ameli_m"), ameli_d:g("ameli_d") };
+  });
+  editingId = null; render();
+}
+
+function cancelEdit() { editingId = null; render(); }
+
+function deleteRow(id) {
+  if (confirm("Supprimer cette ligne ?")) { rows = rows.filter(r=>r.id!==id); render(); }
+}
+
+function startAdding() { adding = true; render(); }
+
+function addRow() {
+  const g = id => document.getElementById(id)?.value || "";
+  rows.push({ id:Date.now(), date:g("n-date"), depense:g("n-dep"), somme:g("n-somme"),
+    mgen_m:g("n-mgen_m"), mgen_d:g("n-mgen_d"), ameli_m:g("n-ameli_m"), ameli_d:g("n-ameli_d") });
+  adding = false; render();
+}
+
+function cancelAdding() { adding = false; render(); }
+
+render();
 </script>
 </body>
 </html>
